@@ -1,0 +1,15 @@
+asgiref==3.8.1
+dj-database-url==2.3.0
+Django==5.1.4
+django-cors-headers==4.0.0
+djangorestframework==3.14.0
+djangorestframework-simplejwt==5.2.2
+djoser==2.2.0
+psycopg2==2.9.6
+psycopg2-binary==2.9.10  
+python-dotenv==1.0.1
+social-auth-app-django==5.2.0
+social-auth-core==4.4.2
+sqlparse==0.5.2
+typing_extensions==4.12.2
+tzdata==2024.2
