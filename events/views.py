@@ -12,6 +12,8 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.exceptions import ValidationError
 from datetime import datetime, timedelta
+from center.models import Center
+from rest_framework.exceptions import NotFound
 
 # Path to your service account key JSON file
 # SERVICE_ACCOUNT_FILE = 'd4medicals/d4medicals\d4medicals-6ce951d3e1f7.json'
@@ -141,64 +143,151 @@ class GoogleCalendarFilteredEventsAPIView(APIView):
         time_min = request.data.get("timeMin")
         time_max = request.data.get("timeMax")
         location = request.data.get("location")
+        center_id = request.data.get("centerId")
         
-        print(location)
-        if not time_min:
-            raise ValidationError({"error": "Date is required."})
-        if not time_max:
-            raise ValidationError({"error": "Date is required."})
-
-        # Scopes for Google Calendar API
-
+        
+        if not center_id:
+            raise NotFound({"error": "centerId parameter is required"})
+        
         try:
-            # Authenticate with Google
-            credentials = service_account.Credentials.from_service_account_file(
-                SERVICE_ACCOUNT_FILE, scopes=SCOPES
-            )
-            service = build("calendar", "v3", credentials=credentials)
-
-            calendar_id = 'shinyuy9@gmail.com' #'primary'
-            # Fetch events for the specified date range
-            events_result = service.events().list(
-                calendarId=calendar_id,
-                timeMin=time_min,
-                timeMax=time_max,
-                singleEvents=True,
-                orderBy="startTime"
-            ).execute()
+            center = Center.objects.get(id=center_id)
             
-            print(events_result.get('items'))
+        
+            print(location)
+            if not time_min:
+                raise ValidationError({"error": "Date is required."})
+            if not time_max:
+                raise ValidationError({"error": "Date is required."})
 
-            events = events_result.get("items", [])
+            # Scopes for Google Calendar API
 
-            # Filter events by location, if provided
-            if location:
-                filtered_events = [event for event in events if event.get('location') == location]
-                print("oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo")
-                print(filtered_events)
+            try:
+                # Authenticate with Google
+                credentials = service_account.Credentials.from_service_account_file(
+                    SERVICE_ACCOUNT_FILE, scopes=SCOPES
+                )
+                service = build("calendar", "v3", credentials=credentials)
 
-            # Format the response
-            formatted_events = [
-                {
+                calendar_id = center.center_calendar_id #'shinyuy9@gmail.com' #'primary'
+                # Fetch events for the specified date range
+                events_result = service.events().list(
+                    calendarId=calendar_id,
+                    timeMin=time_min,
+                    timeMax=time_max,
+                    singleEvents=True,
+                    orderBy="startTime"
+                ).execute()
+            
+
+                events = events_result.get("items", [])
+
+                # Filter events by location, if provided
+                if location:
+                    filtered_events = [event for event in events if event.get('location') == location]
+
+                # Format the response
+                formatted_events = [
+                    {
                     "summary": event.get("summary", "No Title"),
                     "start": event["start"].get("dateTime", event["start"].get("date")),
                     "end": event["end"].get("dateTime", event["end"].get("date")),
                     "location": event.get("location", "No Location Provided"),
-                }
-                for event in filtered_events
-            ]
-            print("oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo")
-            print(formatted_events)
+                    }
+                    for event in filtered_events
+                ]
 
-            return Response({
+                print(formatted_events)
+                return Response({
                 "status": "success",
                 "events": formatted_events,
-            })
-        except Exception as e:
-            return Response({
+                })
+            except Exception as e:
+                return Response({
                 "status": "error",
                 "message": str(e),
-            }, status=500)         
+            }, status=500)    
             
+        except Center.DoesNotExist:
+            raise NotFound({"error": f"Center with centerId '{center_id}' does not exist"})         
             
+ 
+class GoogleCalendarGetFreeSlotsAPIView(APIView):
+    permission_classes = [AllowAny]  # Adjust based on your authentication requirements
+    def post(self, request):  
+        # token = request.headers.get("Authorization").split("Bearer ")[1]
+        # if not token:
+        #     return Response({"error": "Authorization token missing"}, status=401)
+
+        # # creds = Credentials(token)
+        credentials = service_account.Credentials.from_service_account_file(
+                SERVICE_ACCOUNT_FILE, scopes=SCOPES
+            )
+        service = build("calendar", "v3", credentials=credentials)
+
+        # Define the time range for free/busy check
+        time_min = request.data.get("timeMin")
+        time_max = request.data.get("timeMax")
+        location = request.data.get("location")
+        center_id = request.data.get("centerId")
+        
+        
+        if not center_id:
+            raise NotFound({"error": "centerId parameter is required"})
+        
+        try:
+            center = Center.objects.get(id=center_id)
+
+            # Free/Busy Query
+            body = {
+                "timeMin": time_min,
+                "timeMax": time_max,
+                "timeZone": "UTC",
+                "items": [{"id": "shinyuy9@gmail.com"}],
+            }
+            events_result = service.freebusy().query(body=body).execute()
+            busy_times = events_result["calendars"]["shinyuy9@gmail.com"]["busy"]
+
+            # Calculate free slots
+            free_slots = []
+            current_start = time_min
+            for busy in busy_times:
+                free_slots.append({"start": current_start, "end": busy["start"]})
+                current_start = busy["end"]
+
+            free_slots.append({"start": current_start, "end": time_max})
+            all_intervals = generate_working_hour_intervals(free_slots)
+
+            return Response(all_intervals) 
+        except Center.DoesNotExist:
+            raise NotFound({"error": f"Center with centerId '{center_id}' does not exist"})           
             
+
+
+def generate_working_hour_intervals(free_slots, working_start="08:00 AM", working_end="05:00 PM"):
+    # Define working hours as datetime.time objects
+    working_start = datetime.strptime(working_start, "%I:%M %p").time()
+    working_end = datetime.strptime(working_end, "%I:%M %p").time()
+
+    intervals = []
+    for slot in free_slots:
+        # Parse ISO 8601 start and end times
+        start_time = datetime.fromisoformat(slot["start"].replace("Z", "+00:00"))
+        end_time = datetime.fromisoformat(slot["end"].replace("Z", "+00:00"))
+
+        # Adjust the slot to fit within working hours
+        if start_time.time() < working_start:
+            start_time = start_time.replace(hour=working_start.hour, minute=working_start.minute)
+        if end_time.time() > working_end:
+            end_time = end_time.replace(hour=working_end.hour, minute=working_end.minute)
+
+        # Skip slots entirely outside working hours
+        if start_time >= end_time:
+            continue
+
+        # Generate 15-minute intervals within the adjusted slot
+        while start_time + timedelta(minutes=15) <= end_time:
+            interval_end = start_time + timedelta(minutes=15)
+            intervals.append(f"{start_time.strftime('%I:%M %p')} - {interval_end.strftime('%I:%M %p')}")
+            start_time = interval_end
+
+    return intervals

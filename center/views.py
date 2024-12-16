@@ -13,6 +13,7 @@ class CenterCreateView(APIView):
     permission_classes = [IsAuthenticated]
     def post(self, request, *args, **kwargs):
         print(request.data)
+        request.data['center_calendar_id'] = request.user.email
         serializer = CenterSerializer(data=request.data)
         if serializer.is_valid():
             center = serializer.save()  # Save the center to the database

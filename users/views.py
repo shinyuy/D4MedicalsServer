@@ -15,8 +15,10 @@ from rest_framework.permissions import AllowAny
 class CustomProviderAuthView(ProviderAuthView):
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)
-        print(response)
-
+        print("1111111111111111111111111111111111111111111111111111111111111111111111111111")
+        print(request.data)
+        print("1111111111111111111111111111111111111111111111111111111111111111111111111111")
+       
         if response.status_code == 201:
             access_token = response.data.get('access')
             refresh_token = response.data.get('refresh')
@@ -39,6 +41,8 @@ class CustomProviderAuthView(ProviderAuthView):
                 httponly=settings.AUTH_COOKIE_HTTP_ONLY,
                 samesite=settings.AUTH_COOKIE_SAMESITE
             )
+        print(response.data)
+        print("1111111111111111111111111111111111111111111111111111111111111111111111111111")
 
         return response
 
