@@ -42,7 +42,7 @@ SECRET_KEY = getenv("DJANGO_SECRET_KEY", get_random_secret_key())
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = getenv("DEBUG", "False") == "True"
 
-ALLOWED_HOSTS = ['127.0.0.1','localhost','https://d4-medicals.vercel.app' ,'d4medicalsserver.onrender.com']
+ALLOWED_HOSTS = ['127.0.0.1','localhost','d4-medicals.vercel.app' ,'d4medicalsserver.onrender.com']
 
 
 # Application definition
@@ -289,6 +289,9 @@ CORS_ALLOW_METHODS = (
 )
 
 CORS_ALLOW_HEADERS = DEFAULT_HEADERS 
+
+SESSION_COOKIE_DOMAIN = '.yourdomain.com'
+CSRF_COOKIE_DOMAIN = '.yourdomain.com'
   
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
