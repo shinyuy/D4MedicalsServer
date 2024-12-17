@@ -26,7 +26,7 @@ current_directory = os.path.dirname(__file__)
 parent_directory = os.path.abspath(os.path.join(current_directory, '..'))
 
 # Specify the file name located one directory above
-SERVICE_ACCOUNT_FILE = os.path.join(parent_directory, 'd4medicals-6ce951d3e1f7.json')
+SERVICE_ACCOUNT_FILE = '/etc/secrets/d4medicals-6ce951d3e1f7.json'   # os.path.join(parent_directory, 'd4medicals-6ce951d3e1f7.json')
 
 class GoogleCalendarCreateEventAPIView(APIView):
     permission_classes = [IsAuthenticated]  # Adjust based on your authentication requirements
@@ -43,9 +43,12 @@ class GoogleCalendarCreateEventAPIView(APIView):
         if not request.data.get('location'):
             return JsonResponse({'status': 'error', 'message': "Center location is required."}, status=500)
         # Authenticate using the service account
-        credentials = service_account.Credentials.from_service_account_file(  
+        if os.path.exists(SERVICE_ACCOUNT_FILE):
+            credentials = service_account.Credentials.from_service_account_file(  
             SERVICE_ACCOUNT_FILE, scopes=SCOPES
-        )
+            )
+        else:
+            raise FileNotFoundError("Service account file not found at specified path.")    
         
         # Build the Google Calendar service
         service = build('calendar', 'v3', credentials=credentials)
