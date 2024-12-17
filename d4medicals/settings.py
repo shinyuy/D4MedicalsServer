@@ -143,7 +143,6 @@ DEFAULT_FROM_EMAIL = getenv("SENDGRID_SENDER", "")
 DEFAULT_FROM_EMAIL = getenv('SENDGRID_SENDER')  
 
 PROTOCOL = "http"
-DOMAIN = "127.0.0.1:8000"
  
 DOMAIN = getenv('DOMAIN')
 SITE_NAME = 'D4 Medicals'    
