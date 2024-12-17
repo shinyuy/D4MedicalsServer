@@ -289,9 +289,6 @@ CORS_ALLOW_METHODS = (
 )
 
 CORS_ALLOW_HEADERS = DEFAULT_HEADERS 
-
-SESSION_COOKIE_DOMAIN = '.yourdomain.com'
-CSRF_COOKIE_DOMAIN = '.yourdomain.com'
   
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
