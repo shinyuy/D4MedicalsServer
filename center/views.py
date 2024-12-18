@@ -40,6 +40,14 @@ class CenterListView(generics.ListAPIView):
             status=status.HTTP_200_OK
         )
         
+# View to list all centers
+class CenterListLocationsView(generics.ListAPIView):
+    permission_classes = [AllowAny]
+    def get(self, request, *args, **kwargs):
+        # Get all unique locations from the Centers table
+        locations = Center.objects.values_list('location', flat=True).distinct()
+        return JsonResponse({"locations": list(locations)}, safe=False)
+        
 # View to list by location all centers
 class CenterByLocationListView(generics.ListAPIView):
     permission_classes = [AllowAny]
