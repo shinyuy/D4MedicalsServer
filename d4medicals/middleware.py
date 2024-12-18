@@ -20,7 +20,7 @@ class LogRequestsMiddleware:
         response = self.get_response(request)
         response.headers = {
             'Content-Type': 'application/json', 'Vary': 'Accept', 'Allow': 'GET, POST, HEAD, OPTIONS',
-            'Access-Control-Allow-Origin': getenv('FRONTEND_URL'),
+            'Access-Control-Allow-Origin': 'https://d4-medicals.vercel.app',
                                
                             }
 
