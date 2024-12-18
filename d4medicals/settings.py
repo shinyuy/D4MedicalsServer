@@ -213,6 +213,15 @@ AUTH_COOKIE_HTTP_ONLY = getenv('AUTH_COOKIE_HTTP_ONLY') #True
 AUTH_COOKIE_PATH = '/'
 AUTH_COOKIE_SAMESITE = 'None'
 
+
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True  # If using HTTPS
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'  # Or 'None' if frontend and backend are on different domains
+SESSION_COOKIE_AGE = 3600  # 1 hour
+
+
+
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = getenv('GOOGLE_AUTH_KEY')
 SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = getenv('GOOGLE_AUTH_SECRET_KEY')
 SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [
@@ -303,3 +312,6 @@ STATIC_URL = 'static/'
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_ROOT = os.path.join(PROJECT_DIR, 'static')
 STATIC_URL = '/static/'
+
+
+

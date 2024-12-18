@@ -12,8 +12,9 @@ class LogRequestsMiddleware:
         # Log request details
         print("oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo")
         logger.info(f"Request method: {request.method}")
-        logger.info(f"Request path: {request.path}")
+        logger.info(f"Request path: {request.path}")  
         logger.info(f"Request headers: {request.headers}")
+        logger.info(f"Request session: {request.session}")
         print("oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo")
 
         response = self.get_response(request)
